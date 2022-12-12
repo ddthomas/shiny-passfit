@@ -1038,6 +1038,23 @@ server <- function(input, output, session) {
   # Calculations/Process inputs----
   
   calcs <- reactive({
+    
+    # Activity Preferences
+    pretie.tolerance <- (6-input$pretie.1)
+                        + (6-input$pretie.3)
+                        + (6-input$pretie.9)
+                        + (6-input$pretie.13)
+                        + (input$pretie.15)
+    
+    pretie.preference <- (6-input$pretie.2)
+                        + (6-input$pretie.4)
+                        + (6-input$pretie.8)
+                        + (6-input$pretie.12)
+                        + (input$pretie.14)
+    
+    pretie.total <- pretie.tolerance + pretie.preference
+    
+    
     # Physical
     bmi<-(input$weight/2.205)/((input$height*2.54/100)^2)#ht in inches, wt in lbs
     crf<- 3.5*((as.numeric(input$gender)*2.77) - (input$age*0.10) - (bmi*0.17) - (input$rHR*0.03) + (as.numeric(input$SRPA) + 18.07))
@@ -1103,7 +1120,10 @@ server <- function(input, output, session) {
     score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
                + ucla.flag + barse.flag + essq.flag)) * 100
     # All
-    data.frame(CRF = crf, 
+    data.frame(PRETIE.Toler = pretie.tolerance,
+               PRETIE.Pref = pretie.preference,
+               PRETIE.Total = pretie.total,
+               CRF = crf, 
                CRF.Flag = crf.flag,
                SLS = sls,
                SLS.Flag = sls.flag,
