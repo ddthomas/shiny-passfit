@@ -234,13 +234,8 @@ ui <-
                         br(),
                         textInput(demo.q1, "Please enter the name of your research study:",
                                   width = NULL, placeholder = "Study name"), br(),
-                        numericInput(
-                          inputId = demo.q2, 
-                          label = "Study ID :",
-                          value = 000,
-                          min = -999,
-                          max = 999,
-                          step = 1),
+                        textInput(demo.q2, "Study ID:",
+                                  width = NULL, placeholder = "Study ID #"), br(),
                         br(),
                         textInput(demo.q3, "Please enter the name of the affiliated institution or business:",
                                   width = NULL, placeholder = "Affiliation name"), br(),
@@ -892,9 +887,9 @@ ui <-
                              tags$label(h3('Results:')), 
                              br(),
                              tags$label((h5('Total Score:'))),
-                             verbatimTextOutput('score'),
-                             tableOutput('tabledata'))
-                               )))
+                             verbatimTextOutput('score'))
+                             #tableOutput('tabledata')) #this was yielding 9 rows per submission
+                             )))
                             
 
                 ))),
@@ -1040,17 +1035,17 @@ server <- function(input, output, session) {
   calcs <- reactive({
     
     # Activity Preferences
-    pretie.tolerance <- (6-input$pretie.1)
-                        + (6-input$pretie.3)
-                        + (6-input$pretie.9)
-                        + (6-input$pretie.13)
-                        + (input$pretie.15)
+    pretie.tolerance <- (6-as.numeric(input$pretie.1))
+                        + (6-as.numeric(input$pretie.3))
+                        + (6-as.numeric(input$pretie.9))
+                        + (6-as.numeric(input$pretie.13))
+                        + (as.numeric(input$pretie.15))
     
-    pretie.preference <- (6-input$pretie.2)
-                        + (6-input$pretie.4)
-                        + (6-input$pretie.8)
-                        + (6-input$pretie.12)
-                        + (input$pretie.14)
+    pretie.preference <- (6-as.numeric(input$pretie.2))
+                        + (6-as.numeric(input$pretie.4))
+                        + (6-as.numeric(input$pretie.8))
+                        + (6-as.numeric(input$pretie.12))
+                        + (as.numeric(input$pretie.14))
     
     pretie.total <- pretie.tolerance + pretie.preference
     
@@ -1119,6 +1114,7 @@ server <- function(input, output, session) {
   
     score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
                + ucla.flag + barse.flag + essq.flag)) * 100
+    
     # All
     data.frame(PRETIE.Toler = pretie.tolerance,
                PRETIE.Pref = pretie.preference,
@@ -1173,17 +1169,17 @@ server <- function(input, output, session) {
     }
   })
   # score
-  output$score <- renderText({
-
-      calcs()$score
-
-  })
+  # output$score <- renderText({
+  #   if (input$submit>0) {
+  #     isolate(calcs()$score)
+  #   }
+  # })
   # Prediction results tables
-  output$tabledata <- renderTable({
-    if (input$submit>0) { 
-      isolate(calcs()) 
-    } 
-  })
+  # output$tabledata <- renderTable({
+  #   if (input$submit>0) { 
+  #     isolate(calcs()) 
+  #   } 
+  # })
 
   # Calculate Activities----
   
