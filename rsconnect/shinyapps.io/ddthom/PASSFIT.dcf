@@ -1,0 +1,13 @@
+name: PASSFIT
+title: PASSFIT
+username:
+account: ddthom
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6282009
+bundleId: 5909256
+url: https://ddthom.shinyapps.io/PASSFIT/
+when: 1652670070.80725
+lastSyncTime: 1652670070.80727
+asMultiple: FALSE
+asStatic: FALSE
