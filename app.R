@@ -1083,41 +1083,51 @@ server <- function(input, output, session) {
     #essq <- psyc.new[5:13] # CAUSING REPLICATION PROBLEMS
     #essq.mean <- mean(psyc.new[essq.qs])
     #essq.mean <- mean(essq)
-    essq.mean <- (input$essq.1
-                  + input$essq.2
-                  + input$essq.3
-                  + input$essq.4
-                  + input$essq.5
-                  + input$essq.6
-                  + input$essq.7
-                  + input$essq.8
-                  + input$essq.9) / 9
+    essq.1 <- input$essq.1
+    essq.2 <- input$essq.2
+    essq.3 <- input$essq.3
+    essq.4 <- input$essq.4
+    essq.5 <- input$essq.5
+    essq.6 <- input$essq.6
+    essq.7 <- input$essq.7
+    essq.8 <- input$essq.8
+    essq.9 <- input$essq.9
+    
+    essq.mean <- (essq.1
+                  + essq.2
+                  + essq.3
+                  + essq.4
+                  + essq.5
+                  + essq.6
+                  + essq.7
+                  + essq.8
+                  + essq.9) / 9
     
     essq.flag <- case_when(essq <= 7.4 ~ 1, TRUE ~ 0)
 
     ## self-description subscale
-    ESSQ_sdc <- (essq[1] + essq[4] + essq[7])/4 # removed q10 from calc
+    ESSQ_sdc <- (essq.1 + essq.4 + essq.7)/3 # removed q10 from calc
     ## importance subscale
-    ESSQ_ic <- (essq[3] + essq[6] + essq[9])/4 # removed q12 from calc
+    ESSQ_ic <- (essq.3 + essq.6 + essq.9)/3 # removed q12 from calc
     ## certainty subscale
-    ESSQ_cc <- (essq[2] + essq[5] + essq[8])/4 # removed q11 from calc
+    ESSQ_cc <- (essq.2 + essq.5 + essq.8)/3 # removed q11 from calc
 
     # Create variables for schematic or nonschematic eaters
     # Self-desc
-    ESSQ1.bin <- case_when(essq[1] >= 8 & essq[1] <= 11 ~ 1,
-                                 essq[1] < 8 ~ 0)
-    ESSQ4.bin <- case_when(essq[4] >= 8 & essq[4] <= 11 ~ 1,
-                                 essq[4] < 8 ~ 0)
-    ESSQ7.bin <- case_when(essq[7] >= 8 & essq[7] <= 11 ~ 1,
-                                 essq[7] < 8 ~ 0)
+    ESSQ1.bin <- case_when(essq.1 >= 8 & essq.1 <= 11 ~ 1,
+                           essq.1 < 8 ~ 0)
+    ESSQ4.bin <- case_when(essq.4 >= 8 & essq.4 <= 11 ~ 1,
+                                 essq.4 < 8 ~ 0)
+    ESSQ7.bin <- case_when(essq.7 >= 8 & essq.7 <= 11 ~ 1,
+                                 essq.7 < 8 ~ 0)
     ESSQ.desc.sum <- ESSQ1.bin + ESSQ4.bin + ESSQ7.bin
     # Importance
-    ESSQ3.bin <- case_when(essq[3] >= 8 & essq[3] <= 11 ~ 1,
-                                 essq[3] < 8 ~ 0)
-    ESSQ6.bin <- case_when(essq[6] >= 8 & essq[6] <= 11 ~ 1,
-                                 essq[6] < 8 ~ 0)
-    ESSQ9.bin <- case_when(essq[9] >= 8 & essq[9] <= 11 ~ 1,
-                                 essq[9] < 8 ~ 0)
+    ESSQ3.bin <- case_when(essq.3 >= 8 & essq.3 <= 11 ~ 1,
+                                 essq.3 < 8 ~ 0)
+    ESSQ6.bin <- case_when(essq.6 >= 8 & essq.6 <= 11 ~ 1,
+                                 essq.6 < 8 ~ 0)
+    ESSQ9.bin <- case_when(essq.9 >= 8 & essq.9 <= 11 ~ 1,
+                                 essq.9 < 8 ~ 0)
     ESSQ.imp.sum <- ESSQ3.bin + ESSQ6.bin + ESSQ9.bin
 
     # Schematic = 1, Nonschematic = 0
