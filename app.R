@@ -587,7 +587,7 @@ ui <-
                                 label = "Next", 
                                 style = "material-flat",
                                 color = "danger"),
-                              textOutput('success_msg'),
+                              #textOutput('success_msg'),
 
                               br(), br(), br(), br()
                               
@@ -887,8 +887,9 @@ ui <-
                              tags$label(h3('Results:')), 
                              br(),
                              tags$label((h5('Total Score:'))),
-                             verbatimTextOutput('score'))
-                             #tableOutput('tabledata')) #this was yielding 9 rows per submission
+                             textOutput('onehundred'),
+                             textOutput('bmi'),
+                             tableOutput('tabledata')) #this was yielding 9 rows per submission
                              )))
                             
 
@@ -1032,8 +1033,9 @@ server <- function(input, output, session) {
   
   # Calculations/Process inputs----
   
-  calcs <- reactive({
-    
+  
+  calcs <- eventReactive(input$submit,{
+   
     # Activity Preferences
     pretie.tolerance <- (6-as.numeric(input$pretie.1))
                         + (6-as.numeric(input$pretie.3))
@@ -1048,7 +1050,6 @@ server <- function(input, output, session) {
                         + (as.numeric(input$pretie.14))
     
     pretie.total <- pretie.tolerance + pretie.preference
-    
     
     # Physical
     bmi<-(input$weight/2.205)/((input$height*2.54/100)^2)#ht in inches, wt in lbs
@@ -1067,97 +1068,110 @@ server <- function(input, output, session) {
     ucla.flag <- case_when(ucla < 19.5 ~ 1, TRUE ~ 0)
     cog.flags <- fof.flag + gds.flag + ucla.flag
     
-    # Psychological
+    # Psychological ---
     # Declare inputs
     psyc.new <- NULL
     # Append all psyc inputs
     for(input.i in psyc.data){
       psyc.new <- append(psyc.new, parse_number(input[[input.i]])) # keep integers, strip characters
     }
-
     # average of barse answers
-    barse <- mean(psyc.new[barse.qs])
+    #barse <- mean(psyc.new[barse.qs])
+    barse <- (input$barse.1 + input$barse.3 + input$barse.12 + input$barse.13) /4
     barse.flag <- case_when(barse <= 60 ~ 1, TRUE ~ 0)
     #essq
-    essq <- psyc.new[5:13]
+    #essq <- psyc.new[5:13] # CAUSING REPLICATION PROBLEMS
     #essq.mean <- mean(psyc.new[essq.qs])
-    essq.mean <- mean(essq)
-    essq.flag <- case_when(essq <= 7.4 ~ 1, TRUE ~ 0)
+    #essq.mean <- mean(essq)
+    essq.mean <- (input$essq.1
+                  + input$essq.2
+                  + input$essq.3
+                  + input$essq.4
+                  + input$essq.5
+                  + input$essq.6
+                  + input$essq.7
+                  + input$essq.8
+                  + input$essq.9) / 9
     
+    essq.flag <- case_when(essq <= 7.4 ~ 1, TRUE ~ 0)
+
     ## self-description subscale
     ESSQ_sdc <- (essq[1] + essq[4] + essq[7])/4 # removed q10 from calc
     ## importance subscale
     ESSQ_ic <- (essq[3] + essq[6] + essq[9])/4 # removed q12 from calc
     ## certainty subscale
     ESSQ_cc <- (essq[2] + essq[5] + essq[8])/4 # removed q11 from calc
-    
+
     # Create variables for schematic or nonschematic eaters
     # Self-desc
-    ESSQ1.bin <- case_when(essq[1] >= 8 & essq[1] <= 11 ~ 1, 
+    ESSQ1.bin <- case_when(essq[1] >= 8 & essq[1] <= 11 ~ 1,
                                  essq[1] < 8 ~ 0)
-    ESSQ4.bin <- case_when(essq[4] >= 8 & essq[4] <= 11 ~ 1, 
+    ESSQ4.bin <- case_when(essq[4] >= 8 & essq[4] <= 11 ~ 1,
                                  essq[4] < 8 ~ 0)
-    ESSQ7.bin <- case_when(essq[7] >= 8 & essq[7] <= 11 ~ 1, 
+    ESSQ7.bin <- case_when(essq[7] >= 8 & essq[7] <= 11 ~ 1,
                                  essq[7] < 8 ~ 0)
     ESSQ.desc.sum <- ESSQ1.bin + ESSQ4.bin + ESSQ7.bin
     # Importance
-    ESSQ3.bin <- case_when(essq[3] >= 8 & essq[3] <= 11 ~ 1, 
+    ESSQ3.bin <- case_when(essq[3] >= 8 & essq[3] <= 11 ~ 1,
                                  essq[3] < 8 ~ 0)
-    ESSQ6.bin <- case_when(essq[6] >= 8 & essq[6] <= 11 ~ 1, 
+    ESSQ6.bin <- case_when(essq[6] >= 8 & essq[6] <= 11 ~ 1,
                                  essq[6] < 8 ~ 0)
-    ESSQ9.bin <- case_when(essq[9] >= 8 & essq[9] <= 11 ~ 1, 
+    ESSQ9.bin <- case_when(essq[9] >= 8 & essq[9] <= 11 ~ 1,
                                  essq[9] < 8 ~ 0)
     ESSQ.imp.sum <- ESSQ3.bin + ESSQ6.bin + ESSQ9.bin
-    
+
     # Schematic = 1, Nonschematic = 0
     ESSQ.schematic <- ifelse(ESSQ.desc.sum >= 2 & ESSQ.imp.sum >= 2, 1, 0)
-  
-    score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
-               + ucla.flag + barse.flag + essq.flag)) * 100
-    
+
+
+     score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
+                    + ucla.flag + barse.flag + essq.flag)) * 100
     # All
-    data.frame(PRETIE.Toler = pretie.tolerance,
-               PRETIE.Pref = pretie.preference,
-               PRETIE.Total = pretie.total,
-               CRF = crf, 
-               CRF.Flag = crf.flag,
-               SLS = sls,
-               SLS.Flag = sls.flag,
-               PhysTotal = phys.flags,
-               FOF = fof,
-               FOF.Flag = fof.flag,
-               GDS = gds,
-               GDS.Flag = gds.flag,
-               UCLA = ucla,
-               UCLA.Flag = ucla.flag,
-               CogTotal = cog.flags,
-               BARSE = barse,
-               BARSE.Flag = barse.flag,
-               ESSQ = essq,
-               ESSQ.Flag = essq.flag,
-               Score = score)
-    
+    # df <- 
+    # data.frame(PRETIE.Toler = pretie.tolerance,
+    #            PRETIE.Pref = pretie.preference,
+    #            PRETIE.Total = pretie.total,
+    #            CRF = crf,
+    #            CRF.Flag = crf.flag,
+    #            SLS = sls,
+    #            SLS.Flag = sls.flag,
+    #            PhysTotal = phys.flags,
+    #            FOF = fof,
+    #            FOF.Flag = fof.flag,
+    #            GDS = gds,
+    #            GDS.Flag = gds.flag,
+    #            UCLA = ucla,
+    #            UCLA.Flag = ucla.flag,
+    #            CogTotal = cog.flags,
+    #            BARSE = barse,
+    #            BARSE.Flag = barse.flag,
+    #            ESSQ = essq,
+    #            ESSQ.Flag = essq.flag,
+    #            Score = score)
     
   })
   
-  flags <- reactive({
-    
   
+  
+  flags <- reactive({
     data.frame(CRF.Flag = crf.flag)
     return(NULL)
   })
   
-  
   # Process Flags----
-  flagsCalc <- reactive({  
-    
-    return
-    return(paste0("BMI: ", calcs()$bmi, " CRF:", crf() ))
-    
+  flagsPrint <- reactive({  
+    return(paste0("BMI: ", calcs()$bmi, " CRF:", calcs()$crf ))
   })
   
 
-  
+  onehundred <- reactive({
+    print(100)
+  })
+
+  bmi <- reactive({
+    bmi<-(input$weight/2.205)/((input$height*2.54/100)^2)
+    print(bmi)
+  })
   
   # Print Flag Results----
   # Status/Output Text Box
@@ -1168,18 +1182,29 @@ server <- function(input, output, session) {
       return("Server is ready for calculation.")
     }
   })
+
+  output$onehundred <- renderText({
+    if (input$submit>0) { 
+    isolate(onehundred())
+    }
+  })
+  output$bmi <- renderText({
+    if (input$submit>0) { 
+      isolate(bmi())
+    }
+  })
+  
   # score
-  # output$score <- renderText({
-  #   if (input$submit>0) {
-  #     isolate(calcs()$score)
-  #   }
-  # })
+  output$score <- renderText({
+    isolate(calcs()$score)
+  })
+  
   # Prediction results tables
-  # output$tabledata <- renderTable({
-  #   if (input$submit>0) { 
-  #     isolate(calcs()) 
-  #   } 
-  # })
+  output$tabledata <- renderTable({
+    if (input$submit>0) {
+      isolate(calcs())
+    }
+  })
 
   # Calculate Activities----
   
