@@ -889,8 +889,8 @@ ui <-
                              tags$label((h5('Total Score:'))),
                              textOutput('score'),
                              textOutput('onehundred'),
-                             textOutput('bmi'))
-                             #tableOutput('tabledata')) #this was yielding 9 rows per submission
+                             textOutput('bmi'),
+                             tableOutput('tabledata')) #this was yielding 9 rows per submission
                              )))
                             
 
@@ -1034,7 +1034,6 @@ server <- function(input, output, session) {
   
   # Calculations/Process inputs----
   
-  vals <- reactiveValues()
   
   calcs <- eventReactive(input$submit,{
    
@@ -1147,6 +1146,7 @@ server <- function(input, output, session) {
     data.frame(PRETIE.Toler = pretie.tolerance,
                PRETIE.Pref = pretie.preference,
                PRETIE.Total = pretie.total,
+               bmi = bmi,
                CRF = crf,
                CRF.Flag = crf.flag,
                SLS = sls,
@@ -1163,7 +1163,11 @@ server <- function(input, output, session) {
                BARSE.Flag = barse.flag,
                ESSQ = essq.mean,
                ESSQ.Flag = essq.flag,
-               Score = score)
+               score = score)
+    
+    # data.frame(PRETIE.Toler = pretie.tolerance,
+    #            PRETIE.Pref = pretie.preference,
+    #            Score = score)
     
 
   })
@@ -1190,6 +1194,8 @@ server <- function(input, output, session) {
     print(bmi)
   })
   
+
+  
   # Print Flag Results----
   # Status/Output Text Box
   output$status <- renderPrint({
@@ -1207,19 +1213,19 @@ server <- function(input, output, session) {
   })
   output$bmi <- renderText({
     if (input$submit>0) { 
-      isolate(as.numeric(bmi())*100)
+      isolate(as.numeric(calcs()$bmi)*100)
     }
   })
   
   # score
   output$score <- renderText({
-    isolate(vals$score)
+    isolate(calcs()$score)
   })
   
   # Prediction results tables
   output$tabledata <- renderTable({
     if (input$submit>0) {
-      isolate(vals)
+      isolate(calcs())
     }
   })
 
