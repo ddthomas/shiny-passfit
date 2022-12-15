@@ -887,9 +887,10 @@ ui <-
                              tags$label(h3('Results:')), 
                              br(),
                              tags$label((h5('Total Score:'))),
+                             textOutput('score'),
                              textOutput('onehundred'),
-                             textOutput('bmi'),
-                             tableOutput('tabledata')) #this was yielding 9 rows per submission
+                             textOutput('bmi'))
+                             #tableOutput('tabledata')) #this was yielding 9 rows per submission
                              )))
                             
 
@@ -1033,6 +1034,7 @@ server <- function(input, output, session) {
   
   # Calculations/Process inputs----
   
+  vals <- reactiveValues()
   
   calcs <- eventReactive(input$submit,{
    
@@ -1072,26 +1074,31 @@ server <- function(input, output, session) {
     # Declare inputs
     psyc.new <- NULL
     # Append all psyc inputs
-    for(input.i in psyc.data){
-      psyc.new <- append(psyc.new, parse_number(input[[input.i]])) # keep integers, strip characters
-    }
+    # for(input.i in psyc.data){
+    #   psyc.new <- append(psyc.new, parse_number(input[[input.i]])) # keep integers, strip characters
+    # }
     # average of barse answers
     #barse <- mean(psyc.new[barse.qs])
-    barse <- (input$barse.1 + input$barse.3 + input$barse.12 + input$barse.13) /4
+    barse.1 <- parse_number(input$barse.1)
+    barse.3 <- parse_number(input$barse.3)
+    barse.12 <- parse_number(input$barse.12)
+    barse.13 <- parse_number(input$barse.13)
+    
+    barse <- (barse.1 + barse.3 + barse.12 + barse.13) /4
     barse.flag <- case_when(barse <= 60 ~ 1, TRUE ~ 0)
     #essq
     #essq <- psyc.new[5:13] # CAUSING REPLICATION PROBLEMS
     #essq.mean <- mean(psyc.new[essq.qs])
     #essq.mean <- mean(essq)
-    essq.1 <- input$essq.1
-    essq.2 <- input$essq.2
-    essq.3 <- input$essq.3
-    essq.4 <- input$essq.4
-    essq.5 <- input$essq.5
-    essq.6 <- input$essq.6
-    essq.7 <- input$essq.7
-    essq.8 <- input$essq.8
-    essq.9 <- input$essq.9
+    essq.1 <- parse_number(input$essq.1)
+    essq.2 <- parse_number(input$essq.2)
+    essq.3 <- parse_number(input$essq.3)
+    essq.4 <- parse_number(input$essq.4)
+    essq.5 <- parse_number(input$essq.5)
+    essq.6 <- parse_number(input$essq.6)
+    essq.7 <- parse_number(input$essq.7)
+    essq.8 <- parse_number(input$essq.8)
+    essq.9 <- parse_number(input$essq.9)
     
     essq.mean <- (essq.1
                   + essq.2
@@ -1103,7 +1110,7 @@ server <- function(input, output, session) {
                   + essq.8
                   + essq.9) / 9
     
-    essq.flag <- case_when(essq <= 7.4 ~ 1, TRUE ~ 0)
+    essq.flag <- case_when(essq.mean <= 7.4 ~ 1, TRUE ~ 0)
 
     ## self-description subscale
     ESSQ_sdc <- (essq.1 + essq.4 + essq.7)/3 # removed q10 from calc
@@ -1134,31 +1141,31 @@ server <- function(input, output, session) {
     ESSQ.schematic <- ifelse(ESSQ.desc.sum >= 2 & ESSQ.imp.sum >= 2, 1, 0)
 
 
-     score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
+    score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
                     + ucla.flag + barse.flag + essq.flag)) * 100
     # All
-    # df <- 
-    # data.frame(PRETIE.Toler = pretie.tolerance,
-    #            PRETIE.Pref = pretie.preference,
-    #            PRETIE.Total = pretie.total,
-    #            CRF = crf,
-    #            CRF.Flag = crf.flag,
-    #            SLS = sls,
-    #            SLS.Flag = sls.flag,
-    #            PhysTotal = phys.flags,
-    #            FOF = fof,
-    #            FOF.Flag = fof.flag,
-    #            GDS = gds,
-    #            GDS.Flag = gds.flag,
-    #            UCLA = ucla,
-    #            UCLA.Flag = ucla.flag,
-    #            CogTotal = cog.flags,
-    #            BARSE = barse,
-    #            BARSE.Flag = barse.flag,
-    #            ESSQ = essq,
-    #            ESSQ.Flag = essq.flag,
-    #            Score = score)
+    data.frame(PRETIE.Toler = pretie.tolerance,
+               PRETIE.Pref = pretie.preference,
+               PRETIE.Total = pretie.total,
+               CRF = crf,
+               CRF.Flag = crf.flag,
+               SLS = sls,
+               SLS.Flag = sls.flag,
+               PhysTotal = phys.flags,
+               FOF = fof,
+               FOF.Flag = fof.flag,
+               GDS = gds,
+               GDS.Flag = gds.flag,
+               UCLA = ucla,
+               UCLA.Flag = ucla.flag,
+               CogTotal = cog.flags,
+               BARSE = barse,
+               BARSE.Flag = barse.flag,
+               ESSQ = essq.mean,
+               ESSQ.Flag = essq.flag,
+               Score = score)
     
+
   })
   
   
@@ -1200,19 +1207,19 @@ server <- function(input, output, session) {
   })
   output$bmi <- renderText({
     if (input$submit>0) { 
-      isolate(bmi())
+      isolate(as.numeric(bmi())*100)
     }
   })
   
   # score
   output$score <- renderText({
-    isolate(calcs()$score)
+    isolate(vals$score)
   })
   
   # Prediction results tables
   output$tabledata <- renderTable({
     if (input$submit>0) {
-      isolate(calcs())
+      isolate(vals)
     }
   })
 
