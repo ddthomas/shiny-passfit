@@ -1068,7 +1068,8 @@ server <- function(input, output, session) {
     sls <- input$`single leg`
     sls.flag <- case_when(sls <= 60 ~ 1, TRUE ~ 0)
     phys.flags <- crf.flag + sls.flag
-    SRPA <- input$SRPA - 1 # 1to5 scale becomes 0to4
+    SRPA <- input$SRPA # in dataframe, 1to5 scale becomes 0to4
+    PAG.flag <- case_when(SRPA == 1 ~ 1, TRUE ~ 0)
     
     # Cognitive
     fof <- input$fof.1
@@ -1178,24 +1179,33 @@ server <- function(input, output, session) {
                ESSQ.Flag = essq.flag,
                score = score)
     
-    data.frame(StudyID = input$study_id,
+    data.frame(PRETIE.Toler = pretie.tolerance,
+               PRETIE.Pref = pretie.preference,
+               PRETIE.Total = pretie.total,
+               UCLA = ucla,
+               UCLA.Flag = ucla.flag,
+               PhysTotal = phys.flags,
+               PhysTotal = phys.flags,
+               CogTotal = cog.flags,
+               #---
+               StudyID = input$study_id,
                score = score,
                age = input$age,
                gender = input$gender,
                BMIm0 = bmi,
                FOFfail = fof.flag,
                GDSfail = gds.flag,
-               SELFfail = NULL,
+               SELFfail = essq.flag,
                BARSfail = barse.flag,
                SLSfail = sls.flag,
                CRFfail = crf.flag,
-               PAG75fail = NULL,
+               PAG75fail = PAG.flag,
                PASStotal = score / 100,
                fof1m0 = fof,
                GDStot = gds,
                CRFm0 = crf,
-               SRPA = SRPA, #answer minus 1, to match old passfit data
-               RtSEm0 = NULL,
+               SRPA = SRPA -1, #answer minus 1, to match old passfit data
+               RtSEm0 = sls,
                sbe1m0 = barse.q1,
                sbe3m0 = barse.q3,
                sbe12m0 = barse.q12,
