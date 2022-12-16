@@ -18,11 +18,11 @@ library(DT)
 # Demographics
 demo.names <- list(
   demo.q1 = "study",
-  demo.q2 = "study id",
+  demo.q2 = "study_id",
   demo.q3 = "affiliation",
   demo.q4 = "ethnicity",
   demo.q5 = "race",
-  demo.q6 = "marital status")
+  demo.q6 = "marital_status")
 list2env(demo.names, envir = globalenv())
 demo.data <- unlist(demo.names, use.names=FALSE)
 
@@ -192,9 +192,9 @@ gs4_auth(cache=".secrets", email="dennison.david.thomas@gmail.com")
 
 sheet_id <- "1k5SauO_DLgIRxhgynyyz4XlUfutLC8XtnMPMWJlnleU"
 
-saveData <- function(data) {
+saveData <- function(data, sheetName) {
   #data <- data.frame(rbind(c(as.character(Sys.time()),1,2,3)))
-  sheet_append(sheet_id, data)
+  sheet_append(sheet_id, data, sheet = sheetName)
 }
 
 # Styling options ----
@@ -890,6 +890,9 @@ ui <-
                              textOutput('score'),
                              textOutput('onehundred'),
                              textOutput('bmi'),
+                             textOutput('actPref'),
+                             br(),
+                             tableOutput('activities'),
                              tableOutput('tabledata')) #this was yielding 9 rows per submission
                              )))
                             
@@ -916,8 +919,6 @@ server <- function(input, output, session) {
   # Error message (All sections)
   output$error_msg <- renderText({"Please complete all questions"})
   # for testing purposes #output$cog.q14.value <- renderText({ input$ucla.8 })
-
-  
 
   # Navigation----
   # click from demo to act pref
@@ -992,7 +993,6 @@ server <- function(input, output, session) {
   })
   
   # Submit data and move to results page----
-  # need to edit******
   observeEvent(input$submit, {
     ## Psyc Input Validation
     iv <- InputValidator$new()
@@ -1004,7 +1004,6 @@ server <- function(input, output, session) {
     for (i in psyc.data) {
       shiny::req(input[[i]])
     }
-    
     
     # pop-up message
     #session$sendCustomMessage(type = 'testmessage',
@@ -1020,35 +1019,45 @@ server <- function(input, output, session) {
       inputs <- append(inputs, input[[input.i]])
     }
     # Inputs data.frame
-    data <- data.frame(rbind(c(as.character(Sys.time()), inputs))) # calcs()$psyc.new
-    # Save Inputs w/ SAVE DATA FUNCTION
-    saveData(data)
+    data <- data.frame(rbind(c(as.character(Sys.time()), inputs))) 
+    data <- cbind(data, calcs())
+    # Save Inputs w/ SAVE DATA FUNCTION ----
+    sheetName = "Log"
+    saveData(data,sheetName)
     #sheet_append(sheet_id, data)
+    
+    
+    
     
     updateTabsetPanel(session, inputId = "tab_questions",
                       selected = "results")
     output$success_msg <- renderText({"Success"})
   })
   
-  
+  # Read activity data ----
+  activities_sheet <- "Activities"
+  activities <- read_sheet(sheet_id, sheet = activities_sheet)
+  activities <- select(activities, -Code) # drop first column
+  activities <- activities[sample(1:nrow(activities)), ] # shuffle data
   
   # Calculations/Process inputs----
-  
   
   calcs <- eventReactive(input$submit,{
    
     # Activity Preferences
-    pretie.tolerance <- (6-as.numeric(input$pretie.1))
+    pretie.tolerance <- (6-as.numeric(input$pretie.1)
                         + (6-as.numeric(input$pretie.3))
                         + (6-as.numeric(input$pretie.9))
                         + (6-as.numeric(input$pretie.13))
-                        + (as.numeric(input$pretie.15))
+                        + (as.numeric(input$pretie.15)))
     
-    pretie.preference <- (6-as.numeric(input$pretie.2))
+    #pretie.tolerance.num <- case_when(pretie.tolerance >= 17.5 & pretie.tolerance <= 11 ~ 1, pretie.tolerance < 8 ~ 0)
+    
+    pretie.preference <- (6-as.numeric(input$pretie.2)
                         + (6-as.numeric(input$pretie.4))
                         + (6-as.numeric(input$pretie.8))
                         + (6-as.numeric(input$pretie.12))
-                        + (as.numeric(input$pretie.14))
+                        + (as.numeric(input$pretie.14)))
     
     pretie.total <- pretie.tolerance + pretie.preference
     
@@ -1059,6 +1068,7 @@ server <- function(input, output, session) {
     sls <- input$`single leg`
     sls.flag <- case_when(sls <= 60 ~ 1, TRUE ~ 0)
     phys.flags <- crf.flag + sls.flag
+    SRPA <- input$SRPA - 1 # 1to5 scale becomes 0to4
     
     # Cognitive
     fof <- input$fof.1
@@ -1098,6 +1108,9 @@ server <- function(input, output, session) {
     essq.7 <- parse_number(input$essq.7)
     essq.8 <- parse_number(input$essq.8)
     essq.9 <- parse_number(input$essq.9)
+    essq.10 <- parse_number(input$essq.10)
+    essq.11 <- parse_number(input$essq.11)
+    essq.12 <- parse_number(input$essq.12)
     
     essq.mean <- (essq.1
                   + essq.2
@@ -1165,6 +1178,55 @@ server <- function(input, output, session) {
                ESSQ.Flag = essq.flag,
                score = score)
     
+    data.frame(StudyID = input$study_id,
+               score = score,
+               age = input$age,
+               gender = input$gender,
+               BMIm0 = bmi,
+               FOFfail = fof.flag,
+               GDSfail = gds.flag,
+               SELFfail = NULL,
+               BARSfail = barse.flag,
+               SLSfail = sls.flag,
+               CRFfail = crf.flag,
+               PAG75fail = NULL,
+               PASStotal = score / 100,
+               fof1m0 = fof,
+               GDStot = gds,
+               CRFm0 = crf,
+               SRPA = SRPA, #answer minus 1, to match old passfit data
+               RtSEm0 = NULL,
+               sbe1m0 = barse.q1,
+               sbe3m0 = barse.q3,
+               sbe12m0 = barse.q12,
+               sbe13m0 = barse.q13,
+               bars4m0 = barse,
+               ESSQ1 = essq.1,
+               ESSQ2 = essq.2,
+               ESSQ3 = essq.3,
+               ESSQ4 = essq.4,
+               ESSQ5 = essq.5,
+               ESSQ6 = essq.6,
+               ESSQ7 = essq.7,
+               ESSQ8 = essq.8,
+               ESSQ9 = essq.9,
+               ESSQ10 = essq.10,
+               ESSQ11 = essq.11,
+               ESSQ12 = essq.12,
+               ESSQ_sdc = ESSQ_sdc,
+               ESSQ_ic = ESSQ_ic,
+               ESSQ_cc = ESSQ_cc,
+               ESSQ1.bin = ESSQ1.bin,
+               ESSQ4.bin = ESSQ4.bin,
+               ESSQ7.bin = ESSQ7.bin,
+               ESSQ.desc.sum = ESSQ.desc.sum,
+               ESSQ3.bin = ESSQ3.bin,
+               ESSQ6.bin = ESSQ6.bin,
+               ESSQ9.bin = ESSQ9.bin,
+               ESSQ.imp.sum = ESSQ.imp.sum,
+               ESSQ.schematic = ESSQ.schematic)
+
+    
     # data.frame(PRETIE.Toler = pretie.tolerance,
     #            PRETIE.Pref = pretie.preference,
     #            Score = score)
@@ -1174,10 +1236,6 @@ server <- function(input, output, session) {
   
   
   
-  flags <- reactive({
-    data.frame(CRF.Flag = crf.flag)
-    return(NULL)
-  })
   
   # Process Flags----
   flagsPrint <- reactive({  
@@ -1196,7 +1254,7 @@ server <- function(input, output, session) {
   
 
   
-  # Print Flag Results----
+  # OUTPUTS----
   # Status/Output Text Box
   output$status <- renderPrint({
     if (input$submit>0) { 
@@ -1211,6 +1269,7 @@ server <- function(input, output, session) {
     isolate(onehundred())
     }
   })
+  
   output$bmi <- renderText({
     if (input$submit>0) { 
       isolate(as.numeric(calcs()$bmi)*100)
@@ -1222,13 +1281,40 @@ server <- function(input, output, session) {
     isolate(calcs()$score)
   })
   
-  # Prediction results tables
+  # Calcs() table
   output$tabledata <- renderTable({
     if (input$submit>0) {
       isolate(calcs())
     }
   })
+  
+  output$actPref <- renderText({
+    if (input$submit>0) {
+      if (calcs()$PRETIE.Total/2 >= 17.5){
+        return("Your recommended exercise intensity is >6.0 METS.")
+      } else if (calcs()$PRETIE.Total/2 < 13.5){
+        return("Your recommended exercise intensity is <3.0 METS.")
+      } else {
+        return("Your recommended exercise intensity is between 3.0-6.0 METS.")
+      }
+    }
+  })
 
+  output$activities <- renderTable({
+    if (input$submit>0) {
+      if (calcs()$PRETIE.Total/2 >= 17.5){
+        a <- dplyr::filter(activities, METS > 6.0)
+        head(a)
+      } else if (calcs()$PRETIE.Total/2 < 13.5){
+        a <- dplyr::filter(activities, METS < 3.0)
+        head(a)
+      } else {
+        a <- dplyr::filter(activities, METS <= 6.0 & METS >= 3.0)
+        head(a)
+      }
+    }
+  })
+  
   # Calculate Activities----
   
   # Print Activities----
