@@ -1157,27 +1157,27 @@ server <- function(input, output, session) {
     score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
                     + ucla.flag + barse.flag + essq.flag)) * 100
     # All
-    data.frame(PRETIE.Toler = pretie.tolerance,
-               PRETIE.Pref = pretie.preference,
-               PRETIE.Total = pretie.total,
-               bmi = bmi,
-               CRF = crf,
-               CRF.Flag = crf.flag,
-               SLS = sls,
-               SLS.Flag = sls.flag,
-               PhysTotal = phys.flags,
-               FOF = fof,
-               FOF.Flag = fof.flag,
-               GDS = gds,
-               GDS.Flag = gds.flag,
-               UCLA = ucla,
-               UCLA.Flag = ucla.flag,
-               CogTotal = cog.flags,
-               BARSE = barse,
-               BARSE.Flag = barse.flag,
-               ESSQ = essq.mean,
-               ESSQ.Flag = essq.flag,
-               score = score)
+    # data.frame(PRETIE.Toler = pretie.tolerance,
+    #            PRETIE.Pref = pretie.preference,
+    #            PRETIE.Total = pretie.total,
+    #            bmi = bmi,
+    #            CRF = crf,
+    #            CRF.Flag = crf.flag,
+    #            SLS = sls,
+    #            SLS.Flag = sls.flag,
+    #            PhysTotal = phys.flags,
+    #            FOF = fof,
+    #            FOF.Flag = fof.flag,
+    #            GDS = gds,
+    #            GDS.Flag = gds.flag,
+    #            UCLA = ucla,
+    #            UCLA.Flag = ucla.flag,
+    #            CogTotal = cog.flags,
+    #            BARSE = barse,
+    #            BARSE.Flag = barse.flag,
+    #            ESSQ = essq.mean,
+    #            ESSQ.Flag = essq.flag,
+    #            score = score)
     
     data.frame(PRETIE.Toler = pretie.tolerance,
                PRETIE.Pref = pretie.preference,
@@ -1187,9 +1187,9 @@ server <- function(input, output, session) {
                PhysTotal = phys.flags,
                PhysTotal = phys.flags,
                CogTotal = cog.flags,
+               score = score,
                #---
                StudyID = input$study_id,
-               score = score,
                age = input$age,
                gender = input$gender,
                BMIm0 = bmi,
@@ -1334,13 +1334,67 @@ server <- function(input, output, session) {
   # Prediction ----
   
   ## Load Data
-  # coltypes <- ""
-  # pass.data <- read_sheet("https://docs.google.com/spreadsheets/d/1k5SauO_DLgIRxhgynyyz4XlUfutLC8XtnMPMWJlnleU/edit#gid=940908051",
-  #                         sheet = "Data", na = c("NA"))
-  # 
-  # # target as factor
-  # pass.data$dropout <- as.factor(pass.data$dropout)
-  # 
+  passfit.data <- read_sheet("https://docs.google.com/spreadsheets/d/1k5SauO_DLgIRxhgynyyz4XlUfutLC8XtnMPMWJlnleU/edit#gid=940908051",
+                          sheet = "Data", na = c("NA"), col_types = "c")
+
+  # drop study_id and gender columns
+  passfit.data <- select(passfit.data, c(-StudyID, -gender))
+  # column types
+  coltypes <- cols(
+    #StudyID = "i",
+    age = "i",
+    #gender = "f",
+    BMIm0 = "n",
+    FOFfail = "f",
+    GDSfail = "f",
+    SELFfail = "f",
+    BARSfail = "f",
+    SLSfail = "f",
+    CRFfail = "f",
+    PAG75fail = "f",
+    PASStotal = "i",
+    fof1m0 = "i",
+    GDStot = "i",
+    CRFm0 = "n",
+    SRPA = "f", #answer minus 1, to match old passfit data
+    RtSEm0 = "n",
+    sbe1m0 = "n",
+    sbe3m0 = "n",
+    sbe12m0 = "n",
+    sbe13m0 = "n",
+    bars4m0 = "n",
+    ESSQ1 = "n",
+    ESSQ2 = "n",
+    ESSQ3 = "n",
+    ESSQ4 = "n",
+    ESSQ5 = "n",
+    ESSQ6 = "n",
+    ESSQ7 = "n",
+    ESSQ8 = "n",
+    ESSQ9 = "n",
+    ESSQ10 = "n",
+    ESSQ11 = "n",
+    ESSQ12 = "n",
+    ESSQ_sdc = "n",
+    ESSQ_ic = "n",
+    ESSQ_cc = "n",
+    ESSQ1.bin = "f",
+    ESSQ4.bin = "f",
+    ESSQ7.bin = "f",
+    ESSQ.desc.sum = "f",
+    ESSQ3.bin = "f",
+    ESSQ6.bin = "f",
+    ESSQ9.bin = "f",
+    ESSQ.imp.sum = "f",
+    ESSQ.schematic = "f"
+  )
+  # convert column types
+  passfit.data <- type_convert(passfit.data, col_types = coltypes)
+  
+  # labels as factor
+  passfit.data$dropout <- as.factor(pass.data$dropout)
+  
+  
   # ## Train model
   # 
   # library(randomForest)
@@ -1364,6 +1418,16 @@ server <- function(input, output, session) {
   ## Test model
   
   ## Predict w/ new data
+  new_dat <- calcs() %>% select(-PRETIE.Toler,
+                                -PRETIE.Pref,
+                                -PRETIE.Total,
+                                -UCLA,
+                                -UCLA.Flag,
+                                -PhysTotal,
+                                -PhysTotal,
+                                -CogTotal,
+                                -score)
+  
   
 }
 
