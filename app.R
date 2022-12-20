@@ -887,8 +887,14 @@ ui <-
                              tags$label(h3('Results:')), 
                              br(),
                              tags$label((h5('Total Score:'))),
+                             #"Total Score:",
                              textOutput('score'),
-                             textOutput('onehundred'),
+                             tags$label((h5('Flags:'))),
+                             #"Flags:",
+                             textOutput('cogFlags'),
+                             textOutput('physFlags'),
+                             textOutput('psycFlags'),
+                             #textOutput('onehundred'),
                              textOutput('bmi'),
                              textOutput('actPref'),
                              br(),
@@ -1068,8 +1074,8 @@ server <- function(input, output, session) {
     sls <- input$`single leg`
     sls.flag <- case_when(sls <= 60 ~ 1, TRUE ~ 0)
     phys.flags <- crf.flag + sls.flag
-    SRPA <- input$SRPA # in dataframe, 1to5 scale becomes 0to4
-    PAG.flag <- case_when(SRPA == 1 ~ 1, TRUE ~ 0)
+    SRPA <- as.numeric(input$SRPA) -1 # 1to5 scale becomes 0to4
+    PAG.flag <- case_when(SRPA == 0 ~ 1, TRUE ~ 0)
     
     # Cognitive
     fof <- input$fof.1
@@ -1152,7 +1158,8 @@ server <- function(input, output, session) {
 
     # Schematic = 1, Nonschematic = 0
     ESSQ.schematic <- ifelse(ESSQ.desc.sum >= 2 & ESSQ.imp.sum >= 2, 1, 0)
-
+    
+    psyc.flags <- barse.flag + essq.flag
 
     score <- (7 - (crf.flag + sls.flag + fof.flag + gds.flag 
                     + ucla.flag + barse.flag + essq.flag)) * 100
@@ -1185,7 +1192,7 @@ server <- function(input, output, session) {
                UCLA = ucla,
                UCLA.Flag = ucla.flag,
                PhysTotal = phys.flags,
-               PhysTotal = phys.flags,
+               PsycTotal = psyc.flags,
                CogTotal = cog.flags,
                score = score,
                #---
@@ -1204,12 +1211,12 @@ server <- function(input, output, session) {
                fof1m0 = fof,
                GDStot = gds,
                CRFm0 = crf,
-               SRPA = SRPA -1, #answer minus 1, to match old passfit data
+               SRPA = SRPA, 
                RtSEm0 = sls,
-               sbe1m0 = barse.q1,
-               sbe3m0 = barse.q3,
-               sbe12m0 = barse.q12,
-               sbe13m0 = barse.q13,
+               sbe1m0 = barse.1,
+               sbe3m0 = barse.3,
+               sbe12m0 = barse.12,
+               sbe13m0 = barse.13,
                bars4m0 = barse,
                ESSQ1 = essq.1,
                ESSQ2 = essq.2,
@@ -1248,9 +1255,9 @@ server <- function(input, output, session) {
   
   
   # Process Flags----
-  flagsPrint <- reactive({  
-    return(paste0("BMI: ", calcs()$bmi, " CRF:", calcs()$crf ))
-  })
+  # flagsPrint <- reactive({  
+  #   return(paste0("BMI: ", calcs()$bmi, " CRF:", calcs()$crf ))
+  # })
   
 
   onehundred <- reactive({
@@ -1286,9 +1293,20 @@ server <- function(input, output, session) {
     }
   })
   
-  # score
+  # passfit score
   output$score <- renderText({
     isolate(calcs()$score)
+  })
+  
+  # section flags
+  output$cogFlags <- renderText({
+    isolate(calcs()$CogTotal)
+  })
+  output$physFlags <- renderText({
+    isolate(calcs()$PhysTotal)
+  })
+  output$psycFlags <- renderText({
+    isolate(calcs()$PsycTotal)
   })
   
   # Calcs() table
