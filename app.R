@@ -1310,6 +1310,7 @@ server <- function(input, output, session) {
     }
   })
 
+  # Calculate/Print Activities
   output$activities <- renderTable({
     if (input$submit>0) {
       if (calcs()$PRETIE.Total/2 >= 17.5){
@@ -1325,13 +1326,10 @@ server <- function(input, output, session) {
     }
   })
   
-  # Calculate Activities----
-  
-  # Print Activities----
-  
-  
-  
+
   # Prediction ----
+  
+  prediction <- reactive({
   
   ## Load Data
   passfit.data <- read_sheet("https://docs.google.com/spreadsheets/d/1k5SauO_DLgIRxhgynyyz4XlUfutLC8XtnMPMWJlnleU/edit#gid=940908051",
@@ -1390,34 +1388,33 @@ server <- function(input, output, session) {
   )
   # convert column types
   passfit.data <- type_convert(passfit.data, col_types = coltypes)
-  
+
   # labels as factor
-  passfit.data$dropout <- as.factor(pass.data$dropout)
-  
-  
-  # ## Train model
-  # 
-  # library(randomForest)
-  # set.seed(233)
-  # train <- sample(1:nrow(pass.data), nrow(pass.data) * 0.75)
-  # passfit.train <- pass.data[train, ]
-  # passfit.test <- pass.data[-train, ]
-  # # remove rows w/ missing data
-  # #passfit.train <- passfit.train %>% na.omit
-  # #passfit.test <- passfit.test %>% na.omit
-  # # random forest
-  # # mtry = p/2
-  # rf.passfit <- randomForest(dropout ~ . -StudyID, data = passfit.train, ntree = 500, mtry = 16 )
-  # # predict
-  # yhat.passfit <- predict(rf.passfit, newdata = passfit.test)
-  # # test error
-  # table(yhat.passfit, passfit.test$dropout) # confusion matrix
-  # # var importance
-  # varImpPlot(rf.passfit)
-  
+  passfit.data$dropout <- as.factor(passfit.data$dropout)
+
+
+  ## Train model
+
+  library(randomForest)
+  set.seed(233)
+  train <- sample(1:nrow(passfit.data), nrow(passfit.data) * 0.75)
+  passfit.train <- passfit.data[train, ]
+  passfit.test <- passfit.data[-train, ]
+  # remove rows w/ missing data
+  passfit.train <- passfit.train %>% na.omit
+  passfit.test <- passfit.test %>% na.omit
+  # random forest ==
+  # mtry = p/2
+  rf.passfit <- randomForest(dropout ~ ., data = passfit.train, ntree = 500, mtry = 16 )
   ## Test model
+  yhat.passfit <- predict(rf.passfit, newdata = passfit.test)
+  # test error
+  table(yhat.passfit, passfit.test$dropout) # confusion matrix
+  # var importance
+  varImpPlot(rf.passfit)
+
   
-  ## Predict w/ new data
+  # Predict w/ new data
   new_dat <- calcs() %>% select(-PRETIE.Toler,
                                 -PRETIE.Pref,
                                 -PRETIE.Total,
@@ -1428,6 +1425,10 @@ server <- function(input, output, session) {
                                 -CogTotal,
                                 -score)
   
+  prediction <- predict(rf.passfit, newdata = new_dat)
+  print(prediction)
+    
+  })
   
 }
 
