@@ -894,8 +894,10 @@ ui <-
                              textOutput('cogFlags'),
                              textOutput('physFlags'),
                              textOutput('psycFlags'),
+                             br(),
+                             br(),
                              #textOutput('onehundred'),
-                             textOutput('bmi'),
+                             #textOutput('bmi'),
                              textOutput('actPref'),
                              br(),
                              tableOutput('activities'),
@@ -1264,10 +1266,10 @@ server <- function(input, output, session) {
     print(100)
   })
 
-  bmi <- reactive({
-    bmi<-(input$weight/2.205)/((input$height*2.54/100)^2)
-    print(bmi)
-  })
+  # bmi <- reactive({
+  #   bmi<-(input$weight/2.205)/((input$height*2.54/100)^2)
+  #   print(bmi)
+  # })
   
 
   
@@ -1289,7 +1291,7 @@ server <- function(input, output, session) {
   
   output$bmi <- renderText({
     if (input$submit>0) { 
-      isolate(as.numeric(calcs()$bmi)*100)
+      isolate(as.numeric(calcs()$BMIm0)*100)
     }
   })
   
@@ -1300,13 +1302,13 @@ server <- function(input, output, session) {
   
   # section flags
   output$cogFlags <- renderText({
-    isolate(calcs()$CogTotal)
+    isolate(paste0("Cognitive Section Flags: ", calcs()$CogTotal))
   })
   output$physFlags <- renderText({
-    isolate(calcs()$PhysTotal)
+    isolate(paste0("Physical Section Flags: ", calcs()$PhysTotal))
   })
   output$psycFlags <- renderText({
-    isolate(calcs()$PsycTotal)
+    isolate(paste0("Psychological Section Flags: ", calcs()$PsycTotal))
   })
   
   # Calcs() table
