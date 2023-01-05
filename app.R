@@ -11,6 +11,7 @@ library(data.table)
 library(shinyvalidate)
 library(tidyverse)
 library(DT)
+library(randomForest)
 
 
 # Question & Choices Variables ----
@@ -142,30 +143,6 @@ psyc.choices.imp <- c("1 - Not at all important",
 
 #data <- tibble::tibble(Sample = "F", Variable1 = 1, Variable2 = 2, Variable3 = 3, Variable4 = 4, Variable5 = 5)
 
-
-# MySQL
-# pass <- "aezKRmcWE7a5C8!"
-# user <- "passfitapp_admin"
-# db <- "passfitapp_db"
-# ip <- "18.220.149.166"
-
-
-
-# options(mysql = list(
-#   "host" = "127.0.0.1",
-#   "port" = 3306,
-#   "user" = "etcpassfit_admin",
-#   "password" = "aezKRmcWE7a5C8!" C6VtkXpZ7KsRv48
-# ))
-
-# options(mysql = list(
-#   "host" = "18.220.149.166",
-#   "port" = 3306,
-#   "user" = "passfitapp_shiny",
-#   "password" = "C6VtkXpZ7KsRv48" 
-# ))
-# databaseName <- "passfitapp_db"
-# table <- "responses"
 
 # saveData <- function(data) {
 #   # Connect to the database
@@ -896,6 +873,9 @@ ui <-
                              textOutput('psycFlags'),
                              br(),
                              br(),
+                             textOutput('prediction'),
+                             br(),
+                             br(),
                              #textOutput('onehundred'),
                              #textOutput('bmi'),
                              textOutput('actPref'),
@@ -1346,6 +1326,10 @@ server <- function(input, output, session) {
     }
   })
   
+  output$prediction <- renderText({
+    isolate(paste0("Dropout Prediction: ", prediction()))
+  })
+  
 
   # Prediction ----
   
@@ -1355,6 +1339,10 @@ server <- function(input, output, session) {
   passfit.data <- read_sheet("https://docs.google.com/spreadsheets/d/1k5SauO_DLgIRxhgynyyz4XlUfutLC8XtnMPMWJlnleU/edit#gid=940908051",
                           sheet = "Data", na = c("NA"), col_types = "c")
 
+  # test data for making prediction with user responses
+  # new_dat <- read_sheet("https://docs.google.com/spreadsheets/d/1k5SauO_DLgIRxhgynyyz4XlUfutLC8XtnMPMWJlnleU/edit#gid=940908051",
+  #                            sheet = "testResponses", na = c("NA"), col_types = "c")
+  
   # drop study_id and gender columns
   passfit.data <- select(passfit.data, c(-StudyID, -gender))
   # column types
@@ -1414,8 +1402,6 @@ server <- function(input, output, session) {
 
 
   ## Train model
-
-  library(randomForest)
   set.seed(233)
   train <- sample(1:nrow(passfit.data), nrow(passfit.data) * 0.75)
   passfit.train <- passfit.data[train, ]
@@ -1431,7 +1417,7 @@ server <- function(input, output, session) {
   # test error
   table(yhat.passfit, passfit.test$dropout) # confusion matrix
   # var importance
-  varImpPlot(rf.passfit)
+  #varImpPlot(rf.passfit)
 
   
   # Predict w/ new data
@@ -1443,9 +1429,25 @@ server <- function(input, output, session) {
                                 -PhysTotal,
                                 -PhysTotal,
                                 -CogTotal,
-                                -score)
-  
+                                -score,
+                                -StudyID,
+                                -gender)
+
+  # convert column types
+  new_dat <- new_dat %>%
+     mutate(across(everything(), as.character)) # first to character then assign types
+  new_dat <- type_convert(new_dat, col_types = coltypes)
+  #new_dat$dropout <- as.factor(new_dat$dropout)
+  # fix levels so that factor levels match training and user resp.
+  common <- intersect(names(passfit.train), names(new_dat))  # from:https://stackoverflow.com/questions/24829674/r-random-forest-error-type-of-predictors-in-new-data-do-not-match
+  for (p in common) { 
+    if (class(passfit.train[[p]]) == "factor") { 
+      levels(new_dat[[p]]) <- levels(passfit.train[[p]]) 
+    } 
+  }
+  # apply user responses
   prediction <- predict(rf.passfit, newdata = new_dat)
+  
   print(prediction)
     
   })
