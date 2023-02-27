@@ -133,7 +133,8 @@ psyc.choices.imp <- c("1 - Not at all important",
                     "11 - Very important")
 
 
-
+slider_width <- 900
+line <- "---------------------"
 
 
 
@@ -588,7 +589,7 @@ ui <-
                                numericInput(
                                  inputId = phys.q2, 
                                  label = "Your Age :",
-                                 value = 35,
+                                 value = character(0),
                                  min = 18,
                                  max = 100,
                                  step = 1),
@@ -597,7 +598,7 @@ ui <-
                               numericInput(
                                 inputId = phys.q3, 
                                 label = "Your Weight (lbs) :",
-                                value = 155,
+                                value = character(0),
                                 min = 80,
                                 max = 400,
                                 step = 1),
@@ -606,7 +607,7 @@ ui <-
                               numericInput(
                                 inputId = phys.q4, 
                                 label = "Your Height (inches) :",
-                                value = 56,
+                                value = character(0),
                                 min = 45,
                                 max = 85,
                                 step = 1),
@@ -615,7 +616,7 @@ ui <-
                               numericInput(
                                 inputId = phys.q5, 
                                 label = "Your Resting Heart Rate (beats per min) :",
-                                value = 60,
+                                value = character(0),
                                 min = 35,
                                 max = 100,
                                 step = 1),
@@ -653,10 +654,11 @@ ui <-
                               br(), br(),
                               # slst.jpg
                               tags$img(src = "slst.jpg", width = "300px", height = "300px"),
-                              br(),
+                              br(), br(),
                               sliderInput(inputId = phys.q7, 
                                           label = "Enter your answer as a representation of your confidence from 100 (very confident) to 0 (not confident at all).",
-                                          value = 0, min = 0, max = 100),
+                                          value = 0, min = 0, max = 100,
+                                          width = slider_width),
                               br(), br(), br(),
                               tags$script(" $(document).ready(function () {
                                                  $('#phys_next').on('click', function (e) {
@@ -681,6 +683,7 @@ ui <-
                                    br(),            
                                    tags$b("Please indicate the degree to which you are confident that you could exercise in the event that any of the following circumstances were to occur by entering the appropriate % from 0 to 100. Select the response that most closely matches your own, remembering that there are no right or wrong answers."),            
                                    br(), br(),
+            
                                    # The weather was very bad (hot, humid, rainy, cold).
                                    sliderTextInput(
                                      inputId = psyc.q1, 
@@ -689,7 +692,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.con,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # I was on vacation.
                                    sliderTextInput(
@@ -699,7 +702,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.con,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # An instructor does not offer me any encouragement.
                                    sliderTextInput(
@@ -709,7 +712,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.con,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # I was under personal stress of some kind.
                                    sliderTextInput(
@@ -719,9 +722,11 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.con,
-                                     width = 600),
+                                     width = slider_width),
                                    br(), br(),
-                                   
+                                   tags$b(line),
+                                   br(), br(),
+                                   br(),
                                    tags$b("For each of the following questions you are asked to make a rating on a scale of numbers. Answer each question by SELECTING THE APPROPRIATE NUMBER."),
                                    br(), br(),
                                    # Someone who exercises regularly
@@ -732,7 +737,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.des,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How certain are you of this self-description?
                                    sliderTextInput(
@@ -742,7 +747,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.cer,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How important is being someone who exercises regularly to the image you have of yourself, regardless of whether or not the trait describes you?
                                    sliderTextInput(
@@ -752,7 +757,11 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.imp,
-                                     width = 600),
+                                     width = slider_width),
+                                   br(),
+                                   tags$b(line),
+                                   br(),
+                                   br(),
                                    br(),
                                    # Someone who keeps in shape
                                    sliderTextInput(
@@ -762,7 +771,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.des,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How certain are you of this self-description?
                                    sliderTextInput(
@@ -772,7 +781,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.cer,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How important is being someone who keeps in shape regularly to the image you have of yourself, regardless of whether or not the trait describes you?
                                    sliderTextInput(
@@ -782,7 +791,11 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.imp,
-                                     width = 600),
+                                     width = slider_width),
+                                   br(),
+                                   tags$b(line),
+                                   br(),
+                                   br(),
                                    br(),
                                    # Physically active
                                    sliderTextInput(
@@ -792,7 +805,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.des,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How certain are you of this self-description?
                                    sliderTextInput(
@@ -802,7 +815,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.cer,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How important is being physically active to the image you have of yourself, regardless of whether or not the trait describes you?
                                    sliderTextInput(
@@ -812,7 +825,11 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.imp,
-                                     width = 600),
+                                     width = slider_width),
+                                   br(),
+                                   tags$b(line),
+                                   br(),
+                                   br(),
                                    br(),
                                    # I am someone who will always be an exerciser
                                    sliderTextInput(
@@ -822,7 +839,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.des,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How certain are you of this self-description?
                                    sliderTextInput(
@@ -832,7 +849,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.cer,
-                                     width = 600),
+                                     width = slider_width),
                                    br(),
                                    # How important is always being an exerciser to the image you have of yourself, regardless of whether or not the trait describes you?
                                    sliderTextInput(
@@ -842,7 +859,7 @@ ui <-
                                      force_edges = TRUE,
                                      selected = NULL,
                                      choices = psyc.choices.imp,
-                                     width = 600),
+                                     width = slider_width),
                                    br(), br(),
 
                                    tags$head(tags$script(src = "message-handler.js")),
@@ -860,23 +877,24 @@ ui <-
                              br(),
                              fluidPage( 
                                fluidRow(column(12, align="left",
-                             verbatimTextOutput('status'), # Status/Output Text Box
-                             tags$label(h3('Results:')), 
-                             br(),
-                             tags$label((h5('Total Score:'))),
-                             #"Total Score:",
-                             textOutput('score'),
-                             tags$label((h5('Flags:'))),
-                             #"Flags:",
-                             textOutput('cogFlags'),
-                             textOutput('physFlags'),
-                             textOutput('psycFlags'),
-                             br(),
-                             br(),
-                             textOutput('prediction'),
-                             br(),
-                             br(),
-                             #textOutput('onehundred'),
+                             tags$label(h3('Thank you for completing the survey')),                
+                             # verbatimTextOutput('status'), # Status/Output Text Box
+                             # tags$label(h3('Results:')), 
+                             # br(),
+                             # tags$label((h5('Total Score:'))),
+                             # #"Total Score:",
+                             # textOutput('score'),
+                             # tags$label((h5('Flags:'))),
+                             # #"Flags:",
+                             # textOutput('cogFlags'),
+                             # textOutput('physFlags'),
+                             # textOutput('psycFlags'),
+                             # br(),
+                             # br(),
+                             # textOutput('prediction'),
+                             # br(),
+                             # br(),
+                             # #textOutput('onehundred'),
                              #textOutput('bmi'),
                              textOutput('actPref'),
                              br(),
@@ -1451,6 +1469,8 @@ server <- function(input, output, session) {
   print(prediction)
     
   })
+  
+  session$onSessionEnded(stopApp)
   
 }
 
